@@ -1,5 +1,15 @@
 import pandas as pd
 
 # read dataset
-train_dataframe = pd.read_csv("src\data\mnist_train.csv")
-test_dataframe = pd.read_csv("src\data\mnist_test.csv")
+train_df = pd.read_csv("src/data/mnist_train.csv")
+test_df = pd.read_csv("src/data/mnist_test.csv")
+
+# split train dataframe to X, y
+X_train = train_df.drop(columns=['label']).values
+y_train = train_df['label'].values
+
+# split test dataframe to X, y
+X_test = test_df.drop(columns=['label']).values
+y_test = test_df['label'].values
+
+# normalize dataset
