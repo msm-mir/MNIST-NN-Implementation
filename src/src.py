@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 # read dataset
 train_df = pd.read_csv("src/data/mnist_train.csv")
@@ -13,5 +14,14 @@ X_test = test_df.drop(columns=['label']).values
 y_test = test_df['label'].values
 
 # normalize dataset
-X_train = X_train / 255
-X_test = X_test / 255
+X_train = X_train.T / 255
+X_test = X_test.T / 255
+
+# weights and biases initialization
+np.random.seed(42)
+
+W1 = np.random.randn(128, X_train.shape[0]) * 0.01
+b1 = np.zeros((128, 1))
+
+W2 = np.random.randn(10, 128) * 0.01
+b2 = np.zeros((10, 1))
