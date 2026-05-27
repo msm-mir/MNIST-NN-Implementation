@@ -13,3 +13,5 @@ X_test = test_df.drop(columns=['label']).values
 y_test = test_df['label'].values
 
 # normalize dataset
+X_train = X_train / 255
+X_test = X_test / 255
