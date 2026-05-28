@@ -22,6 +22,10 @@ class neural_network:
         for i in range(1, len(self.n)):
             self.W[i] = np.random.randn(self.n[i], self.n[i - 1]) * 0.01
             self.b[i] = np.zeros((self.n[i], 1))
+    
+    # ReLU activation function for hidden layers
+    def relu(self, Z):
+        return np.maximum(0, Z)
 
 
 # read dataset
