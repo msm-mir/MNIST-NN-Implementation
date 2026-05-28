@@ -59,17 +59,30 @@ class neural_network:
 
     # calculate loss function
     def cross_entropy(self):
-        m = y_train.shape[0]
+        m = self.y_oh.shape[1]
 
         # clip output layer values to avoid exact 0 and 1
         A_clipped = np.clip(self.A[-1], 1e-15, 1 - 1e-15)
 
-        # calculate the formula
+        # calculate the formula of cross entropy
         loss_elements = (self.y_oh * np.log(A_clipped)) + ((1 - self.y_oh) * np.log(1 - A_clipped))
         cost = (-1 / m) * np.sum(loss_elements)
 
         return np.squeeze(cost)
+    
+    # backward propagation
+    def back_propagation(self):
+        m = self.y_oh.shape[1]
 
+        # for each hidden layer
+        for i in range(len(self.n) - 1, 0, -1):
+            if i == len(self.n) - 1:
+                self.dZ[i] = self.A[i] - self.y_oh
+            else:
+                self.dZ[i] = np.dot(self.W[i + 1].T, self.dZ[i + 1]) * (self.Z[i] > 0)
+            
+            self.dW[i] = (1 / m) * np.dot(self.dZ[i], self.A[i - 1].T)
+            self.db[i] = (1 / m) * np.sum(self.dZ[i], axis=1, keepdims=True)
 
 # read dataset
 train_df = pd.read_csv("src/data/mnist_train.csv")
