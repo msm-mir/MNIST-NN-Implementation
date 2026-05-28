@@ -121,13 +121,25 @@ class neural_network:
         # set the input data
         self.A[0] = X_test
 
-        # calculate probabilities for each test data
+        # calculate probabilities for each instance
         probabilities = self.forward_propagation()
 
         # prediction
         predictions = np.argmax(probabilities, axis=0)
 
         return predictions
+    
+    def accuracy(self, X_test, y_test):
+        # prediction for test data
+        predictions = self.predict(X_test)
+        
+        # real outputs vs prediction
+        correct_predictions = (predictions == y_test)
+
+        # calculate accuracy evaluation
+        accuracy = np.mean(correct_predictions) * 100
+
+        return accuracy
 
 # read dataset
 train_df = pd.read_csv("src/data/mnist_train.csv")
