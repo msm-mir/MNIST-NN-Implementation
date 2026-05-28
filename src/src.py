@@ -13,7 +13,12 @@ class neural_network:
         self.A = {0: X}
         # number of neurons for each layer
         self.n = neurons
-        self.y = y_train
+        # one hot y matrix
+        self.y_oh = self.init_y_one_hot(y_train)
+        # derivatives of matrices
+        self.dW = {}
+        self.db = {}
+        self.dZ = {}
     
     # weights and biases initialization
     def init_W_b(self):
@@ -46,18 +51,21 @@ class neural_network:
             else:
                 self.A[i] = self.sigmoid(self.Z[i])
 
+    # broadcast y_train to A's dimensions
+    def init_y_one_hot(self, y_train):
+        m = y_train.shape[0]
+        self.y_oh = np.zeros((10, m))
+        self.y_oh[y_train, np.arange(m)] = 1
+
     # calculate loss function
     def cross_entropy(self):
-        # broadcast y_train to A's dimensions
-        m = self.y.shape[0]
-        y_one_hot = np.zeros((10, m))
-        y_one_hot[self.y, np.arange(m)] = 1
+        m = y_train.shape[0]
 
         # clip output layer values to avoid exact 0 and 1
         A_clipped = np.clip(self.A[-1], 1e-15, 1 - 1e-15)
 
         # calculate the formula
-        loss_elements = (y_one_hot * np.log(A_clipped)) + ((1 - y_one_hot) * np.log(1 - A_clipped))
+        loss_elements = (self.y_oh * np.log(A_clipped)) + ((1 - self.y_oh) * np.log(1 - A_clipped))
         cost = (-1 / m) * np.sum(loss_elements)
 
         return np.squeeze(cost)
