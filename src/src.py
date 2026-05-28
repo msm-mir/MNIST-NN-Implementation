@@ -22,6 +22,8 @@ class neural_network:
 
         self.learning_rate = learning_rate
         self.epochs = epochs
+
+        self.init_W_b()
     
     # weights and biases initialization
     def init_W_b(self):
@@ -54,20 +56,22 @@ class neural_network:
             else:
                 self.A[i] = self.sigmoid(self.Z[i])
 
-        return self.A[-1]
+        return self.A[len(self.n) - 1]
 
     # broadcast y_train to A's dimensions
     def init_y_one_hot(self, y_train):
         m = y_train.shape[0]
-        self.y_oh = np.zeros((10, m))
-        self.y_oh[y_train, np.arange(m)] = 1
+        new_y = np.zeros((10, m))
+        new_y[y_train, np.arange(m)] = 1
+        return new_y
 
     # calculate loss function
     def cross_entropy(self):
         m = self.y_oh.shape[1]
+        n = len(self.n) - 1
 
         # clip output layer values to avoid exact 0 and 1
-        A_clipped = np.clip(self.A[-1], 1e-15, 1 - 1e-15)
+        A_clipped = np.clip(self.A[n], 1e-15, 1 - 1e-15)
 
         # calculate the formula of cross entropy
         loss_elements = (self.y_oh * np.log(A_clipped)) + ((1 - self.y_oh) * np.log(1 - A_clipped))
@@ -96,9 +100,7 @@ class neural_network:
             self.W[i] = self.W[i] - (self.learning_rate * self.dW[i])
             self.b[i] = self.b[i] - (self.learning_rate * self.db[i])
 
-    def fit(self):
-        self.init_W_b()
-        
+    def fit(self):        
         for epoch in range(self.epochs):
             # prediction
             output = self.forward_propagation()
