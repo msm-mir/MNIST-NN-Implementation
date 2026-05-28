@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 class neural_network:
-    def __init__(self, X, neurons):
+    def __init__(self, X, y_train, neurons):
         # weight matrix
         self.W = {}
         # bias matrix (with one column)
@@ -13,6 +13,7 @@ class neural_network:
         self.A = {0: X}
         # number of neurons for each layer
         self.n = neurons
+        self.y = y_train
     
     # weights and biases initialization
     def init_W_b(self):
@@ -44,6 +45,22 @@ class neural_network:
             # Sigmoid activation function only for output layer
             else:
                 self.A[i] = self.sigmoid(self.Z[i])
+
+    # calculate loss function
+    def cross_entropy(self):
+        # broadcast y_train to A's dimensions
+        m = self.y.shape[0]
+        y_one_hot = np.zeros((10, m))
+        y_one_hot[self.y, np.arange(m)] = 1
+
+        # clip output layer values to avoid exact 0 and 1
+        A_clipped = np.clip(self.A[-1], 1e-15, 1 - 1e-15)
+
+        # calculate the formula
+        loss_elements = (y_one_hot * np.log(A_clipped)) + ((1 - y_one_hot) * np.log(1 - A_clipped))
+        cost = (-1 / m) * np.sum(loss_elements)
+
+        return np.squeeze(cost)
 
 
 # read dataset
