@@ -2,9 +2,18 @@ import pandas as pd
 import numpy as np
 
 class neural_network:
-    def __init__(self, W, b):
-        self.W = W
-        self.b = b
+    def __init__(self, X, neurons):
+        # weight matrix
+        self.W = {}
+        # bias matrix (with one column)
+        self.b = {}
+        # output of linear equation
+        self.Z = {}
+        # output of activation function
+        self.A = {0: X}
+        # number of neurons for each layer
+        self.n = neurons
+
 
 # read dataset
 train_df = pd.read_csv("src/data/mnist_train.csv")
@@ -22,15 +31,5 @@ y_test = test_df['label'].values
 X_train = X_train.T / 255
 X_test = X_test.T / 255
 
-# weights and biases initialization
-np.random.seed(42)
-
-# first hidden layer
-neuron1 = 128
-Weight1 = np.random.randn(neuron1, X_train.shape[0]) * 0.01
-bias1 = np.zeros((neuron1, 1))
-
-# output layer
-neuron2 = 10
-Weight2 = np.random.randn(neuron2, neuron1) * 0.01
-bias2 = np.zeros((neuron2, 1))
+# number of neurons for each layer (input, hidden, output)
+neurons = {0: X_train.shape[0], 1: 128, 2: X_train}
