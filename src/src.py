@@ -30,6 +30,16 @@ class neural_network:
     # Sigmoid activation function for output layer
     def sigmoid(self, Z):
         return 1 / (1 + np.exp(-Z))
+    
+    # forward propagation step
+    def forward_propagation(self):
+        for i in range(1, len(self.n)):
+            self.Z[i] = np.dot(self.W[i], self.A[i - 1]) + self.b[i]
+            
+            if i != len(self.n) - 1:
+                self.A[i] = self.relu(self.Z[i])
+            else:
+                self.A[i] = self.sigmoid(self.Z[i])
 
 
 # read dataset
@@ -49,4 +59,4 @@ X_train = X_train.T / 255
 X_test = X_test.T / 255
 
 # number of neurons for each layer (input, hidden, output)
-neurons = {0: X_train.shape[0], 1: 128, 2: X_train}
+neurons = {0: X_train.shape[0], 1: 128, 2: 10}
