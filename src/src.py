@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 class neural_network:
-    def __init__(self, X, y_train, neurons):
+    def __init__(self, X, y_train, neurons, learning_rate):
         # weight matrix
         self.W = {}
         # bias matrix (with one column)
@@ -19,6 +19,8 @@ class neural_network:
         self.dW = {}
         self.db = {}
         self.dZ = {}
+
+        self.learning_rate = learning_rate
     
     # weights and biases initialization
     def init_W_b(self):
@@ -83,6 +85,13 @@ class neural_network:
             
             self.dW[i] = (1 / m) * np.dot(self.dZ[i], self.A[i - 1].T)
             self.db[i] = (1 / m) * np.sum(self.dZ[i], axis=1, keepdims=True)
+
+    # update weights and biases using gradient descent
+    def update_params(self):
+        # for each layer
+        for i in range(1, len(self.n)):
+            self.W[i] = self.W[i] - (self.learning_rate * self.dW[i])
+            self.b[i] = self.b[i] - (self.learning_rate * self.db[i])
 
 # read dataset
 train_df = pd.read_csv("src/data/mnist_train.csv")
