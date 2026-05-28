@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 class neural_network:
-    def __init__(self, X, y_train, neurons, learning_rate, epochs):
+    def __init__(self, X, y, neurons, learning_rate, epochs):
         # weight matrix
         self.W = {}
         # bias matrix (with one column)
@@ -14,7 +14,7 @@ class neural_network:
         # number of neurons for each layer
         self.n = neurons
         # one hot y matrix
-        self.y_oh = self.init_y_one_hot(y_train)
+        self.y_oh = self.init_y_one_hot(y)
         # derivatives of matrices
         self.dW = {}
         self.db = {}
@@ -58,11 +58,11 @@ class neural_network:
 
         return self.A[len(self.n) - 1]
 
-    # broadcast y_train to A's dimensions
-    def init_y_one_hot(self, y_train):
-        m = y_train.shape[0]
+    # broadcast y matrix to A's dimensions
+    def init_y_one_hot(self, y):
+        m = y.shape[0]
         new_y = np.zeros((10, m))
-        new_y[y_train, np.arange(m)] = 1
+        new_y[y, np.arange(m)] = 1
         return new_y
 
     # calculate loss function
@@ -115,7 +115,7 @@ class neural_network:
             self.update_params()
 
             if epoch % 100 == 0:
-                print(f'Epoch{epoch}: Cost={cost:.5f}')
+                print(f'Epoch {epoch}: Cost = {cost:.5f}')
 
 # read dataset
 train_df = pd.read_csv("src/data/mnist_train.csv")
@@ -135,3 +135,7 @@ X_test = X_test.T / 255
 
 # number of neurons for each layer (input, hidden, output)
 neurons = {0: X_train.shape[0], 1: 128, 2: 10}
+
+# create the model
+nn = neural_network(X_train, y_train, neurons, learning_rate=0.01, epochs=500)
+nn.fit()
