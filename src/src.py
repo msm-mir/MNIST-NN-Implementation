@@ -101,7 +101,7 @@ class neural_network:
             self.b[i] = self.b[i] - (self.learning_rate * self.db[i])
 
     def fit(self):        
-        for epoch in range(self.epochs):
+        for epoch in range(self.epochs + 1):
             # prediction
             output = self.forward_propagation()
 
@@ -116,6 +116,18 @@ class neural_network:
 
             if epoch % 100 == 0:
                 print(f'Epoch {epoch}: Cost = {cost:.5f}')
+
+    def predict(self, X_test):
+        # set the input data
+        self.A[0] = X_test
+
+        # calculate probabilities for each test data
+        probabilities = self.forward_propagation()
+
+        # prediction
+        predictions = np.argmax(probabilities, axis=0)
+
+        return predictions
 
 # read dataset
 train_df = pd.read_csv("src/data/mnist_train.csv")
@@ -136,6 +148,12 @@ X_test = X_test.T / 255
 # number of neurons for each layer (input, hidden, output)
 neurons = {0: X_train.shape[0], 1: 128, 2: 10}
 
+# init model params
+learning_rate = 0.76
+epochs = 500
+
 # create the model
-nn = neural_network(X_train, y_train, neurons, learning_rate=0.01, epochs=500)
+nn = neural_network(X_train, y_train, neurons, learning_rate, epochs)
+print(f'Learning Rate: {learning_rate}, Epochs: {epochs}')
 nn.fit()
+print()
