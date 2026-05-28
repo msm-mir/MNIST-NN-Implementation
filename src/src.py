@@ -26,6 +26,10 @@ class neural_network:
     # ReLU activation function for hidden layers
     def relu(self, Z):
         return np.maximum(0, Z)
+    
+    # Sigmoid activation function for output layer
+    def sigmoid(self, Z):
+        return 1 / (1 + np.exp(-Z))
 
 
 # read dataset
