@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 class neural_network:
-    def __init__(self, X, y_train, neurons, learning_rate):
+    def __init__(self, X, y_train, neurons, learning_rate, epochs):
         # weight matrix
         self.W = {}
         # bias matrix (with one column)
@@ -21,6 +21,7 @@ class neural_network:
         self.dZ = {}
 
         self.learning_rate = learning_rate
+        self.epochs = epochs
     
     # weights and biases initialization
     def init_W_b(self):
@@ -52,6 +53,8 @@ class neural_network:
             # Sigmoid activation function only for output layer
             else:
                 self.A[i] = self.sigmoid(self.Z[i])
+
+        return self.A[-1]
 
     # broadcast y_train to A's dimensions
     def init_y_one_hot(self, y_train):
@@ -92,6 +95,25 @@ class neural_network:
         for i in range(1, len(self.n)):
             self.W[i] = self.W[i] - (self.learning_rate * self.dW[i])
             self.b[i] = self.b[i] - (self.learning_rate * self.db[i])
+
+    def fit(self):
+        self.init_W_b()
+        
+        for epoch in range(self.epochs):
+            # prediction
+            output = self.forward_propagation()
+
+            # loss function
+            cost = self.cross_entropy()
+
+            # back propagation
+            self.back_propagation()
+
+            # update weights and biases
+            self.update_params()
+
+            if epoch % 100 == 0:
+                print(f'Epoch{epoch}: Cost={cost:.5f}')
 
 # read dataset
 train_df = pd.read_csv("src/data/mnist_train.csv")
