@@ -33,11 +33,15 @@ class neural_network:
     
     # forward propagation step
     def forward_propagation(self):
+        # for each layer
         for i in range(1, len(self.n)):
+            # calculate linear equation output (Z = W . A + b)
             self.Z[i] = np.dot(self.W[i], self.A[i - 1]) + self.b[i]
             
+            # ReLU activation function for all layers except output layer
             if i != len(self.n) - 1:
                 self.A[i] = self.relu(self.Z[i])
+            # Sigmoid activation function only for output layer
             else:
                 self.A[i] = self.sigmoid(self.Z[i])
 
