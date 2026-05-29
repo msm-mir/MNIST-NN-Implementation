@@ -157,9 +157,19 @@ class neural_network:
 
         return loss
 
+    def confusion_matrix(self, y, predictions):
+        # new (10, 10) matrix with zero values
+        cm = np.zeros((10, 10), dtype=int)
+    
+        # populating the confusion matrix
+        for true_label, pred_label in zip(y, predictions):
+            cm[true_label, pred_label] += 1
+            
+        return cm
 
-def accuracy_plot(model, X, y, set_name):
-    accuracy = model.accuracy(y, model.predict(X))
+
+def accuracy_plot(model, X, y, predictions, set_name):
+    accuracy = model.accuracy(y, predictions)
     print(f'Accuracy on {set_name} set: {accuracy:.2f}%')
 
     plt.figure(figsize=(5, 3))
@@ -218,5 +228,6 @@ accuracy_plot(nn, X_train, y_train, 'training')
 loss_plot(nn, X_train, y_train, 'training')
 
 # evaluation plotting for test set
-accuracy_plot(nn, X_test, y_test, 'test')
+predictions = nn.predict(X_test)
+accuracy_plot(nn, X_test, y_test, predictions, 'test')
 loss_plot(nn, X_test, y_test, 'test')
