@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 class neural_network:
-    def __init__(self, X, y, neurons, learning_rate, epochs):
+    def __init__(self, neurons, learning_rate, epochs):
         # weight matrix
         self.W = {}
         # bias matrix (with one column)
@@ -10,11 +10,9 @@ class neural_network:
         # output of linear equation
         self.Z = {}
         # output of activation function
-        self.A = {0: X}
+        self.A = {}
         # number of neurons for each layer
         self.n = neurons
-        # one hot y matrix
-        self.y_oh = self.init_y_one_hot(y)
         # derivatives of matrices
         self.dW = {}
         self.db = {}
@@ -43,7 +41,9 @@ class neural_network:
         return 1 / (1 + np.exp(-Z))
     
     # forward propagation step
-    def forward_propagation(self):
+    def forward_propagation(self, X):
+        self.A[0] = X
+
         # for each layer
         for i in range(1, len(self.n)):
             # calculate linear equation output (Z = W . A + b)
@@ -66,27 +66,27 @@ class neural_network:
         return new_y
 
     # calculate loss function
-    def cross_entropy(self):
-        m = self.y_oh.shape[1]
+    def cross_entropy(self, y_oh):
+        m = y_oh.shape[1]
         n = len(self.n) - 1
 
         # clip output layer values to avoid exact 0 and 1
         A_clipped = np.clip(self.A[n], 1e-15, 1 - 1e-15)
 
         # calculate the formula of cross entropy
-        loss_elements = (self.y_oh * np.log(A_clipped)) + ((1 - self.y_oh) * np.log(1 - A_clipped))
+        loss_elements = (y_oh * np.log(A_clipped)) + ((1 - y_oh) * np.log(1 - A_clipped))
         cost = (-1 / m) * np.sum(loss_elements)
 
         return np.squeeze(cost)
     
     # backward propagation
-    def back_propagation(self):
-        m = self.y_oh.shape[1]
+    def back_propagation(self, y_oh):
+        m = y_oh.shape[1]
 
         # for each hidden layer
         for i in range(len(self.n) - 1, 0, -1):
             if i == len(self.n) - 1:
-                self.dZ[i] = self.A[i] - self.y_oh
+                self.dZ[i] = self.A[i] - y_oh
             else:
                 self.dZ[i] = np.dot(self.W[i + 1].T, self.dZ[i + 1]) * (self.Z[i] > 0)
             
@@ -100,29 +100,28 @@ class neural_network:
             self.W[i] = self.W[i] - (self.learning_rate * self.dW[i])
             self.b[i] = self.b[i] - (self.learning_rate * self.db[i])
 
-    def fit(self):        
+    def fit(self, X, y):
+        y_oh = self.init_y_one_hot(y)
+
         for epoch in range(self.epochs + 1):
             # prediction
-            output = self.forward_propagation()
+            output = self.forward_propagation(X)
 
             # loss function
-            cost = self.cross_entropy()
+            cost = self.cross_entropy(y_oh)
 
             # back propagation
-            self.back_propagation()
+            self.back_propagation(y_oh)
 
             # update weights and biases
             self.update_params()
 
-            if epoch % 100 == 0:
-                print(f'Epoch {epoch}: Cost = {cost:.5f}')
+            # if epoch % 100 == 0:
+                # print(f'Epoch {epoch}: Cost = {cost:.5f}')
 
     def predict(self, X_test):
-        # set the input data
-        self.A[0] = X_test
-
         # calculate probabilities for each instance
-        probabilities = self.forward_propagation()
+        probabilities = self.forward_propagation(X_test)
 
         # prediction
         predictions = np.argmax(probabilities, axis=0)
@@ -161,11 +160,21 @@ X_test = X_test.T / 255
 neurons = {0: X_train.shape[0], 1: 128, 2: 10}
 
 # init model params
-learning_rate = 0.76
+learning_rate = 0.75
 epochs = 500
 
 # create the model
-nn = neural_network(X_train, y_train, neurons, learning_rate, epochs)
-print(f'Learning Rate: {learning_rate}, Epochs: {epochs}')
-nn.fit()
-print()
+nn = neural_network(neurons, learning_rate, epochs)
+
+# training the model
+print('Starting training...')
+nn.fit(X_train, y_train)
+print('Training completed!\n')
+
+# accuracy evaluation on training set
+train_accuracy = nn.accuracy(X_train, y_train)
+print(f'Accuracy on training set: {train_accuracy:.2f}%')
+
+# accuracy evaluation on test set
+test_accuracy = nn.accuracy(X_test, y_test)
+print(f'Accuracy on test set: {test_accuracy:.2f}%')
