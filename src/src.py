@@ -110,14 +110,14 @@ class neural_network:
         # prediction
         predictions = np.argmax(output, axis=0)
 
-        return output, predictions
+        return predictions
 
     def fit(self, X, y):
         y_oh = self.init_y_one_hot(y)
 
         for epoch in range(self.epochs + 1):
             # prediction by forward propagation
-            output, predictions = self.predict(X)
+            predictions = self.predict(X)
 
             # loss function
             cost = self.cross_entropy(y_oh)
@@ -129,13 +129,13 @@ class neural_network:
             self.update_params()
 
             # store accuracy in each epoch for plotting
-            current_accuracy = self.accuracy(X, y, predictions)
+            current_accuracy = self.accuracy(y, predictions)
             self.accuracy_history.append(current_accuracy)
 
-            if epoch % 10 == 0:
+            if epoch % 30 == 0:
                 print(f'Epoch {epoch}: Cost = {cost:.5f}')
     
-    def accuracy(self, X, y, predictions):
+    def accuracy(self, y, predictions):
         # real outputs vs prediction
         correct_predictions = (predictions == y)
 
@@ -143,6 +143,18 @@ class neural_network:
         accuracy = np.mean(correct_predictions) * 100
 
         return accuracy
+
+def accuracy_plot(nn, X, y, print):
+    accuracy = nn.accuracy(y, nn.predict(X))
+    print(f'Accuracy on {print} set: {accuracy:.2f}%')
+
+    plt.figure(figsize=(7, 5))
+    plt.plot(nn.accuracy_history, label=f'{print} Accuracy')
+    plt.title('Model Accuracy over Epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy (%)')
+    plt.grid(True)
+    plt.show()
 
 # read dataset
 train_df = pd.read_csv("src/data/mnist_train.csv")
@@ -164,8 +176,8 @@ X_test = X_test.T / 255
 neurons = {0: X_train.shape[0], 1: 128, 2: 10}
 
 # init model params
-learning_rate = 0.75
-epochs = 100
+learning_rate = 0.7
+epochs = 150
 
 # create the model
 nn = neural_network(neurons, learning_rate, epochs)
@@ -175,10 +187,5 @@ print('Starting training...')
 nn.fit(X_train, y_train)
 print('Training completed!\n')
 
-# accuracy evaluation on training set
-train_accuracy = nn.accuracy(X_train, y_train)
-print(f'Accuracy on training set: {train_accuracy:.2f}%')
-
-# accuracy evaluation on test set
-test_accuracy = nn.accuracy(X_test, y_test)
-print(f'Accuracy on test set: {test_accuracy:.2f}%')
+accuracy_plot(nn, X_train, y_train, 'training')
+accuracy_plot(nn, X_test, y_test, 'test')
