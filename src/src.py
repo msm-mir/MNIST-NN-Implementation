@@ -132,7 +132,7 @@ class neural_network:
             current_accuracy = self.accuracy(y, predictions)
             self.accuracy_history.append(current_accuracy)
 
-            if epoch % 30 == 0:
+            if epoch % 10 == 0:
                 print(f'Epoch {epoch}: Cost = {cost:.5f}')
     
     def accuracy(self, y, predictions):
@@ -144,13 +144,13 @@ class neural_network:
 
         return accuracy
 
-def accuracy_plot(nn, X, y, print):
-    accuracy = nn.accuracy(y, nn.predict(X))
-    print(f'Accuracy on {print} set: {accuracy:.2f}%')
+def accuracy_plot(model, X, y, set_name):
+    accuracy = model.accuracy(y, model.predict(X))
+    print(f'Accuracy on {set_name} set: {accuracy:.2f}%')
 
     plt.figure(figsize=(7, 5))
-    plt.plot(nn.accuracy_history, label=f'{print} Accuracy')
-    plt.title('Model Accuracy over Epochs')
+    plt.plot(model.accuracy_history, label=f'{set_name} Accuracy')
+    plt.title(f'Model Accuracy over Epochs on {set_name} set')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy (%)')
     plt.grid(True)
@@ -176,8 +176,8 @@ X_test = X_test.T / 255
 neurons = {0: X_train.shape[0], 1: 128, 2: 10}
 
 # init model params
-learning_rate = 0.7
-epochs = 150
+learning_rate = 0.5
+epochs = 50
 
 # create the model
 nn = neural_network(neurons, learning_rate, epochs)
