@@ -144,6 +144,16 @@ class neural_network:
 
         return accuracy
 
+    def loss(self, y):
+        # broadcast y matrix to A's dimensions
+        y_oh = self.init_y_one_hot(y)
+
+        # calculate loss evaluation
+        loss = self.cross_entropy(y_oh)
+
+        return loss
+
+
 def accuracy_plot(model, X, y, set_name):
     accuracy = model.accuracy(y, model.predict(X))
     print(f'Accuracy on {set_name} set: {accuracy:.2f}%')
@@ -187,5 +197,6 @@ print('Starting training...')
 nn.fit(X_train, y_train)
 print('Training completed!\n')
 
+# accuracy plotting
 accuracy_plot(nn, X_train, y_train, 'training')
 accuracy_plot(nn, X_test, y_test, 'test')
