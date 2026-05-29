@@ -23,6 +23,7 @@ class neural_network:
         self.epochs = epochs
 
         self.accuracy_history = []
+        self.loss_history = []
 
         self.init_W_b()
     
@@ -132,6 +133,9 @@ class neural_network:
             current_accuracy = self.accuracy(y, predictions)
             self.accuracy_history.append(current_accuracy)
 
+            # store loss in each epoch for plotting
+            self.accuracy_history.append(cost)
+
             if epoch % 10 == 0:
                 print(f'Epoch {epoch}: Cost = {cost:.5f}')
     
@@ -158,11 +162,23 @@ def accuracy_plot(model, X, y, set_name):
     accuracy = model.accuracy(y, model.predict(X))
     print(f'Accuracy on {set_name} set: {accuracy:.2f}%')
 
-    plt.figure(figsize=(7, 5))
+    plt.figure(figsize=(5, 3))
     plt.plot(model.accuracy_history, label=f'{set_name} Accuracy')
     plt.title(f'Model Accuracy over Epochs on {set_name} set')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy (%)')
+    plt.grid(True)
+    plt.show()
+
+def loss_plot(model, X, y, set_name):
+    loss = model.loss(y)
+    print(f'Loss on {set_name} set: {loss:.2f}%')
+
+    plt.figure(figsize=(5, 3))
+    plt.plot(model.loss_history, label=f'{set_name} Loss')
+    plt.title(f'Model Loss over Epochs on {set_name} set')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
     plt.grid(True)
     plt.show()
 
@@ -197,6 +213,10 @@ print('Starting training...')
 nn.fit(X_train, y_train)
 print('Training completed!\n')
 
-# accuracy plotting
+# evaluation plotting for training set
 accuracy_plot(nn, X_train, y_train, 'training')
+loss_plot(nn, X_train, y_train, 'training')
+
+# evaluation plotting for test set
 accuracy_plot(nn, X_test, y_test, 'test')
+loss_plot(nn, X_test, y_test, 'test')
