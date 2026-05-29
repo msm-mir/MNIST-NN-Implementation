@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 class neural_network:
     def __init__(self, neurons, learning_rate, epochs):
@@ -20,6 +21,8 @@ class neural_network:
 
         self.learning_rate = learning_rate
         self.epochs = epochs
+
+        self.accuracy_history = []
 
         self.init_W_b()
     
@@ -100,12 +103,21 @@ class neural_network:
             self.W[i] = self.W[i] - (self.learning_rate * self.dW[i])
             self.b[i] = self.b[i] - (self.learning_rate * self.db[i])
 
+    def predict(self, X):
+        # calculate probabilities for each instance
+        output = self.forward_propagation(X)
+
+        # prediction
+        predictions = np.argmax(output, axis=0)
+
+        return output, predictions
+
     def fit(self, X, y):
         y_oh = self.init_y_one_hot(y)
 
         for epoch in range(self.epochs + 1):
-            # prediction
-            output = self.forward_propagation(X)
+            # prediction by forward propagation
+            output, predictions = self.predict(X)
 
             # loss function
             cost = self.cross_entropy(y_oh)
@@ -116,24 +128,16 @@ class neural_network:
             # update weights and biases
             self.update_params()
 
-            # if epoch % 100 == 0:
-                # print(f'Epoch {epoch}: Cost = {cost:.5f}')
+            # store accuracy in each epoch for plotting
+            current_accuracy = self.accuracy(X, y, predictions)
+            self.accuracy_history.append(current_accuracy)
 
-    def predict(self, X_test):
-        # calculate probabilities for each instance
-        probabilities = self.forward_propagation(X_test)
-
-        # prediction
-        predictions = np.argmax(probabilities, axis=0)
-
-        return predictions
+            if epoch % 10 == 0:
+                print(f'Epoch {epoch}: Cost = {cost:.5f}')
     
-    def accuracy(self, X_test, y_test):
-        # prediction for test data
-        predictions = self.predict(X_test)
-        
+    def accuracy(self, X, y, predictions):
         # real outputs vs prediction
-        correct_predictions = (predictions == y_test)
+        correct_predictions = (predictions == y)
 
         # calculate accuracy evaluation
         accuracy = np.mean(correct_predictions) * 100
@@ -161,7 +165,7 @@ neurons = {0: X_train.shape[0], 1: 128, 2: 10}
 
 # init model params
 learning_rate = 0.75
-epochs = 500
+epochs = 100
 
 # create the model
 nn = neural_network(neurons, learning_rate, epochs)
