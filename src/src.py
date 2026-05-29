@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 class neural_network:
     def __init__(self, neurons, learning_rate, epochs):
@@ -134,7 +135,7 @@ class neural_network:
             self.accuracy_history.append(current_accuracy)
 
             # store loss in each epoch for plotting
-            self.accuracy_history.append(cost)
+            self.loss_history.append(cost)
 
             if epoch % 10 == 0:
                 print(f'Epoch {epoch}: Cost = {cost:.5f}')
@@ -159,37 +160,46 @@ class neural_network:
 
     def confusion_matrix(self, y, predictions):
         # new (10, 10) matrix with zero values
-        cm = np.zeros((10, 10), dtype=int)
+        confusion_m = np.zeros((10, 10), dtype=int)
     
         # populating the confusion matrix
         for true_label, pred_label in zip(y, predictions):
-            cm[true_label, pred_label] += 1
+            confusion_m[true_label, pred_label] += 1
             
-        return cm
+        return confusion_m
 
 
-def accuracy_plot(model, X, y, predictions, set_name):
+def accuracy_plot(model, y, predictions, set_name):
     accuracy = model.accuracy(y, predictions)
-    print(f'Accuracy on {set_name} set: {accuracy:.2f}%')
+    print(f'Accuracy on {set_name} Set: {accuracy:.2f}%')
 
-    plt.figure(figsize=(5, 3))
+    plt.figure(figsize=(7, 5))
     plt.plot(model.accuracy_history, label=f'{set_name} Accuracy')
-    plt.title(f'Model Accuracy over Epochs on {set_name} set')
+    plt.title(f'Model Accuracy over Epochs on {set_name} Set')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy (%)')
     plt.grid(True)
     plt.show()
 
-def loss_plot(model, X, y, set_name):
+def loss_plot(model, y, set_name):
     loss = model.loss(y)
-    print(f'Loss on {set_name} set: {loss:.2f}%')
+    print(f'Loss on {set_name} Set: {loss:.2f}%')
 
-    plt.figure(figsize=(5, 3))
+    plt.figure(figsize=(7, 5))
     plt.plot(model.loss_history, label=f'{set_name} Loss')
-    plt.title(f'Model Loss over Epochs on {set_name} set')
+    plt.title(f'Model Loss over Epochs on {set_name} Set')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.grid(True)
+    plt.show()
+
+def confusion_matrix_plot(y, predictions, set_name):
+    cm = confusion_matrix(y, predictions)
+
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=[str(i) for i in range(10)])
+    fig, ax = plt.subplots(figsize=(7, 5))
+    disp.plot(ax=ax, cmap='Blues', values_format='d')
+    plt.title(f'Confusion Matrix on {set_name} Set')
     plt.show()
 
 # read dataset
@@ -224,10 +234,13 @@ nn.fit(X_train, y_train)
 print('Training completed!\n')
 
 # evaluation plotting for training set
-accuracy_plot(nn, X_train, y_train, 'training')
-loss_plot(nn, X_train, y_train, 'training')
+predictions = nn.predict(X_train)
+accuracy_plot(nn, y_train, predictions, 'Training')
+loss_plot(nn, y_train, 'Training')
+confusion_matrix_plot(y_train, predictions, 'Training')
 
 # evaluation plotting for test set
 predictions = nn.predict(X_test)
-accuracy_plot(nn, X_test, y_test, predictions, 'test')
-loss_plot(nn, X_test, y_test, 'test')
+accuracy_plot(nn, y_test, predictions, 'Test')
+loss_plot(nn, y_test, 'Test')
+confusion_matrix_plot(y_test, predictions, 'Test')
