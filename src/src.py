@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 class neural_network:
-    def __init__(self, neurons, learning_rate, epochs):
+    def __init__(self, neurons, learning_rate, epochs, keep_n_prob):
         # weight matrix
         self.W = {}
         # bias matrix (with one column)
@@ -19,9 +19,12 @@ class neural_network:
         self.dW = {}
         self.db = {}
         self.dZ = {}
+        # store kept neurons 
+        self.keep_n = {}
 
         self.learning_rate = learning_rate
         self.epochs = epochs
+        self.keep_n_prob = keep_n_prob
 
         self.accuracy_history = []
         self.loss_history = []
@@ -46,7 +49,7 @@ class neural_network:
         return 1 / (1 + np.exp(-Z))
     
     # forward propagation step
-    def forward_propagation(self, X):
+    def forward_propagation(self, X, is_training):
         self.A[0] = X
 
         # for each layer
@@ -57,6 +60,16 @@ class neural_network:
             # ReLU activation function for all layers except output layer
             if i != len(self.n) - 1:
                 self.A[i] = self.relu(self.Z[i])
+
+                # apply dropout only during training
+                if is_training and self.keep_n_prob < 1.0:
+                    # generate a dropout mask of the same size as the current layer
+                    self.keep_n[i] = (np.random.rand(*self.A[i].shape) < self.keep_n_prob).astype(int)
+                    # set the output of dropped neurons to zero
+                    self.A[i] = self.A[i] * self.keep_n[i]
+                    # inverted dropout scaling
+                    self.A[i] = self.A[i] / self.keep_n_prob
+
             # Sigmoid activation function only for output layer
             else:
                 self.A[i] = self.sigmoid(self.Z[i])
@@ -105,9 +118,9 @@ class neural_network:
             self.W[i] = self.W[i] - (self.learning_rate * self.dW[i])
             self.b[i] = self.b[i] - (self.learning_rate * self.db[i])
 
-    def predict(self, X):
+    def predict(self, X, is_training):
         # calculate probabilities for each instance
-        output = self.forward_propagation(X)
+        output = self.forward_propagation(X, is_training)
 
         # prediction
         predictions = np.argmax(output, axis=0)
@@ -138,7 +151,7 @@ class neural_network:
 
         return mini_batches
 
-    def fit(self, X, y, batch_size):
+    def fit(self, X, y, batch_size, is_training):
         for epoch in range(1, self.epochs + 1):
             # create mini batches for this epoch
             mini_batches = self.create_mini_batches(X, y, batch_size)
@@ -152,7 +165,7 @@ class neural_network:
                 y_oh = self.init_y_one_hot(mini_batch_y)
 
                 # prediction by forward propagation
-                predictions = self.predict(mini_batch_X)
+                predictions = self.predict(mini_batch_X, is_training)
 
                 # loss function
                 cost = self.cross_entropy(y_oh)
@@ -165,7 +178,7 @@ class neural_network:
                 self.update_params()
 
             # store accuracy in each epoch for plotting
-            predictions = self.predict(X)
+            predictions = self.predict(X, is_training)
             current_accuracy = self.accuracy(y, predictions)
             self.accuracy_history.append(current_accuracy)
 
@@ -272,7 +285,7 @@ nn.fit(X_train, y_train, batch_size)
 print('Training completed!\n')
 
 # evaluation plotting for training set
-predictions = nn.predict(X_train)
+predictions = nn.predict(X_train, True)
 accuracy_plot(nn, y_train, predictions, 'Training')
 loss_plot(nn, y_train, 'Training')
 confusion_matrix_plot(y_train, predictions, 'Training')
@@ -280,7 +293,7 @@ confusion_matrix_plot(y_train, predictions, 'Training')
 print()
 
 # evaluation plotting for test set
-predictions = nn.predict(X_test)
+predictions = nn.predict(X_test, False)
 accuracy_plot(nn, y_test, predictions, 'Test')
 loss_plot(nn, y_test, 'Test')
 confusion_matrix_plot(y_test, predictions, 'Test')
