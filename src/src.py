@@ -157,6 +157,28 @@ class neural_network:
 
         return mini_batches
 
+    def train_step(self, mini_batch, is_training):
+        # split mini batch to X, y
+        mini_batch_X, mini_batch_y = mini_batch
+
+        # one-hot encode the labels of y batch
+        y_oh = self.init_y_one_hot(mini_batch_y)
+
+        # prediction by forward propagation
+        self.forward_propagation(mini_batch_X, is_training)
+
+        # loss function
+        cost = self.cross_entropy(y_oh)
+        epoch_cost += cost
+
+        # back propagation
+        self.back_propagation(y_oh)
+
+        # update weights and biases
+        self.update_params()
+
+        return epoch_cost, 
+
     def fit(self, X, y, batch_size, is_training, patience):
         # initialization for early stopping
         best_cost = float('inf1')
@@ -168,24 +190,7 @@ class neural_network:
             epoch_cost = 0
 
             for mini_batch in mini_batches:
-                # split mini batch to X, y
-                mini_batch_X, mini_batch_y = mini_batch
-
-                # one-hot encode the labels of y batch
-                y_oh = self.init_y_one_hot(mini_batch_y)
-
-                # prediction by forward propagation
-                predictions = self.predict(mini_batch_X, is_training)
-
-                # loss function
-                cost = self.cross_entropy(y_oh)
-                epoch_cost += cost
-
-                # back propagation
-                self.back_propagation(y_oh)
-
-                # update weights and biases
-                self.update_params()
+                epoch_cost,  = self.train_step(mini_batch, is_training)
 
             # store accuracy in each epoch for plotting
             predictions = self.predict(X, is_training)
@@ -206,7 +211,8 @@ class neural_network:
                 patience_cnt += 1
 
             if patience_cnt >= patience:
-                print(f'Early stopping triggered at epoch {epoch} with best cost: {best_cost:.5f}')
+                print(f'\nEarly stopping triggered at epoch {epoch} with best cost: {best_cost:.5f}\n')
+                break
     
     def accuracy(self, y, predictions):
         # real outputs vs prediction
