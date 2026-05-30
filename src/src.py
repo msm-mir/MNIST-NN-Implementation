@@ -114,6 +114,30 @@ class neural_network:
 
         return predictions
 
+    def create_mini_batches(self, X, y, batch_size):
+        mini_batches = []
+        m = X.shape[1]
+
+        # shuffle data at each epoch to vary the batches
+        permutation = list(np.random.permutation(m))
+        shuffled_X = X[:, permutation]
+        shuffled_y = y[permutation]
+
+        # split data to complete batches
+        num_complete_batches = m // batch_size
+        for k in range(num_complete_batches):
+            mini_batch_X = shuffled_X[:, k * batch_size : (k + 1) * batch_size]
+            mini_batch_y = shuffled_y[k * batch_size : (k + 1) * batch_size]
+            mini_batches.append(mini_batch_X, mini_batch_y)
+
+        # for remaining data
+        if m % batch_size != 0:
+            mini_batch_X = shuffled_X[:, num_complete_batches * batch_size : ]
+            mini_batch_y = shuffled_y[num_complete_batches * batch_size : ]
+            mini_batches.append((mini_batch_X, mini_batch_y))
+
+        return mini_batches
+
     def fit(self, X, y):
         y_oh = self.init_y_one_hot(y)
 
