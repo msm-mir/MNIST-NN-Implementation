@@ -157,7 +157,11 @@ class neural_network:
 
         return mini_batches
 
-    def fit(self, X, y, batch_size, is_training):
+    def fit(self, X, y, batch_size, is_training, patience):
+        # initialization for early stopping
+        best_cost = float('inf1')
+        patience_cnt = 0
+
         for epoch in range(1, self.epochs + 1):
             # create mini batches for this epoch
             mini_batches = self.create_mini_batches(X, y, batch_size)
@@ -194,6 +198,15 @@ class neural_network:
 
             if epoch == self.epochs:
                 print(f"Last Epoch ({epoch})'s Cost: {avg_epoch_cost:.5f}\n")
+
+            if avg_epoch_cost < best_cost:
+                best_cost = avg_epoch_cost
+                patience_cnt = 0
+            else:
+                patience_cnt += 1
+
+            if patience_cnt >= patience:
+                print(f'Early stopping triggered at epoch {epoch} with best cost: {best_cost:.5f}')
     
     def accuracy(self, y, predictions):
         # real outputs vs prediction
@@ -295,6 +308,7 @@ learning_rate = 0.8
 epochs = 120
 batch_size = 128
 keep_neuron_prob = 0.8
+patience = 5
 
 # create the model
 nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob)
@@ -302,7 +316,7 @@ nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob)
 # training the model
 print('Starting training...\n')
 print(f'Learning Rate: {learning_rate}')
-nn.fit(X_train, y_train, batch_size)
+nn.fit(X_train, y_train, batch_size, patience)
 print('Training completed!\n')
 
 # save model parameters to a file
