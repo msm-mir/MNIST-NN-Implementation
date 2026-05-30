@@ -283,6 +283,18 @@ def loss_plot(model, y, set_name):
 
 def confusion_matrix_plot(y, predictions, set_name):
     cm = confusion_matrix(y, predictions)
+    
+    # advanced analyzing
+    errors_matrix = cm.copy()
+    np.fill_diagonal(errors_matrix, 0)
+    print("\nAdvanced Confusion Matrix Analysis")
+    top_error_indices = np.argsort(errors_matrix.flatten())[-3:][::-1]
+    for idx in top_error_indices:
+        true_digit = idx // 10
+        pred_digit = idx % 10
+        error_count = errors_matrix[true_digit, pred_digit]
+        
+        print(f"Digit '{true_digit}' was mistakenly predicted as '{pred_digit}' ({error_count} times)")
 
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=[str(i) for i in range(10)])
     fig, ax = plt.subplots(figsize=(7, 5))
