@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import pickle
 
 class neural_network:
-    def __init__(self, neurons, learning_rate, epochs, keep_n_prob):
+    def __init__(self, neurons, learning_rate, epochs, keep_n_prob, optimizer):
         # weight matrix
         self.W = {}
         # bias matrix (with one column)
@@ -22,18 +22,26 @@ class neural_network:
         self.dZ = {}
         # store kept neurons 
         self.keep_n = {}
+        # for adam algorithm
+        self.V_dW = {}
+        self.V_db = {}
+        self.S_dW = {}
+        self.S_db = {}
 
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.keep_n_prob = keep_n_prob
+        self.optimizer = optimizer
+        self.update_steps_cnt = 0
 
         self.accuracy_history = []
         self.loss_history = []
 
-        self.init_W_b()
+        if optimizer == 'gd': self.init_gd_W_b()
+        else: self.init_adam_W_b()
     
-    # weights and biases initialization
-    def init_W_b(self):
+    # weights and biases initialization for gd algo
+    def init_gd_W_b(self):
         np.random.seed(42)
 
         # start from 1st layer to the last layer that we've set
@@ -41,6 +49,14 @@ class neural_network:
             self.W[i] = np.random.randn(self.n[i], self.n[i - 1]) * 0.01
             self.b[i] = np.zeros((self.n[i], 1))
     
+    # weights and biases initialization for adam algo
+    def init_adam_W_b(self):
+        for i in range(1, len(self.n)):
+            self.V_dW[i] = np.zeros_like(self.W[i])
+            self.V_db[i] = np.zeros_like(self.b[i])
+            self.S_dW[i] = np.zeros_like(self.W[i])
+            self.S_db[i] = np.zeros_like(self.b[i])
+
     # ReLU activation function for hidden layers
     def relu(self, Z):
         return np.maximum(0, Z)
@@ -326,12 +342,15 @@ X_train = X_train.T / 255
 X_test = X_test.T / 255
 
 # init model params
-learning_rate = 0.8, epochs = 120, batch_size = 128, keep_neuron_prob = 0.8, patience = 5
 # number of neurons for each layer (input, hidden, output)
 neurons = {0: 784, 1: 128, 2: 10}
+learning_rate = 0.8, epochs = 120,  keep_neuron_prob = 0.8, optimizer = 'adam'
 
 # create the model
-nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob)
+nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob, optimizer)
+
+# init fit params
+batch_size = 128, patience = 5
 
 # training the model
 print('Starting training...\n')
