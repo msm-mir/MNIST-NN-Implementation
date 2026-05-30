@@ -117,7 +117,7 @@ class neural_network:
     def fit(self, X, y):
         y_oh = self.init_y_one_hot(y)
 
-        for epoch in range(self.epochs + 1):
+        for epoch in range(1, self.epochs + 1):
             # prediction by forward propagation
             predictions = self.predict(X)
 
@@ -137,8 +137,8 @@ class neural_network:
             # store loss in each epoch for plotting
             self.loss_history.append(cost)
 
-            if epoch % 10 == 0:
-                print(f'Epoch {epoch}: Cost = {cost:.5f}')
+            if epoch == self.epochs:
+                print(f"Last Epoch ({epoch})'s Cost: {cost:.5f}\n")
     
     def accuracy(self, y, predictions):
         # real outputs vs prediction
@@ -183,7 +183,7 @@ def accuracy_plot(model, y, predictions, set_name):
 
 def loss_plot(model, y, set_name):
     loss = model.loss(y)
-    print(f'Loss on {set_name} Set: {loss:.2f}%')
+    print(f'Loss on {set_name} Set: {loss:.2f}')
 
     plt.figure(figsize=(7, 5))
     plt.plot(model.loss_history, label=f'{set_name} Loss')
@@ -222,14 +222,15 @@ X_test = X_test.T / 255
 neurons = {0: X_train.shape[0], 1: 128, 2: 10}
 
 # init model params
-learning_rate = 0.5
-epochs = 50
+learning_rate = 0.8
+epochs = 120
 
 # create the model
 nn = neural_network(neurons, learning_rate, epochs)
 
 # training the model
-print('Starting training...')
+print('Starting training...\n')
+print(f'Learning Rate: {learning_rate}')
 nn.fit(X_train, y_train)
 print('Training completed!\n')
 
@@ -239,8 +240,12 @@ accuracy_plot(nn, y_train, predictions, 'Training')
 loss_plot(nn, y_train, 'Training')
 confusion_matrix_plot(y_train, predictions, 'Training')
 
+print()
+
 # evaluation plotting for test set
 predictions = nn.predict(X_test)
 accuracy_plot(nn, y_test, predictions, 'Test')
 loss_plot(nn, y_test, 'Test')
 confusion_matrix_plot(y_test, predictions, 'Test')
+
+print()
