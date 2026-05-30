@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import pickle
 
 class neural_network:
     def __init__(self, neurons, learning_rate, epochs, keep_n_prob):
@@ -222,6 +223,20 @@ class neural_network:
             
         return confusion_m
 
+    # save trained weights and biases in a file
+    def save_W_and_b(self):
+        model_params = {'W': self.W, 'b': self.b, 'n': self.n}
+        with open("weights_and_biases.pkl", 'wb') as f:
+            pickle.dump(model_params, f)
+
+    # load trained weights and biases in a file
+    def load_W_and_b(self):
+        with open("weights_and_biases.pkl", 'rb') as f:
+            model_params = pickle.load(f)
+        
+        self.W = model_params['W']
+        self.b = model_params['b']
+        self.n = model_params['n']
 
 def accuracy_plot(model, y, predictions, set_name):
     accuracy = model.accuracy(y, predictions)
@@ -290,6 +305,9 @@ print(f'Learning Rate: {learning_rate}')
 nn.fit(X_train, y_train, batch_size)
 print('Training completed!\n')
 
+# save model parameters to a file
+nn.save_W_and_b()
+
 # evaluation plotting for training set
 predictions = nn.predict(X_train, True)
 accuracy_plot(nn, y_train, predictions, 'Training')
@@ -298,10 +316,14 @@ confusion_matrix_plot(y_train, predictions, 'Training')
 
 print()
 
+# create new model and load previous model parameters from a file
+fresh_nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob)
+fresh_nn.load_W_and_b()
+
 # evaluation plotting for test set
-predictions = nn.predict(X_test, False)
-accuracy_plot(nn, y_test, predictions, 'Test')
-loss_plot(nn, y_test, 'Test')
+predictions = fresh_nn.predict(X_test, False)
+accuracy_plot(fresh_nn, y_test, predictions, 'Test')
+loss_plot(fresh_nn, y_test, 'Test')
 confusion_matrix_plot(y_test, predictions, 'Test')
 
 print()
