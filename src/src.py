@@ -37,8 +37,8 @@ class neural_network:
         self.accuracy_history = []
         self.loss_history = []
 
-        if optimizer == 'gd': self.init_gd_W_b()
-        else: self.init_adam_W_b()
+        self.init_gd_W_b()
+        self.init_adam_W_b()
     
     # weights and biases initialization for gd algorithm
     def init_gd_W_b(self):
@@ -125,10 +125,10 @@ class neural_network:
             else:
                 self.dZ[i] = np.dot(self.W[i + 1].T, self.dZ[i + 1]) * (self.Z[i] > 0)
 
-            # apply dropout mask to the gradients in hidden layers
-            if self.keep_n_prob < 1.0:
-                self.dZ[i] = self.dZ * self.keep_n[i]
-                self.dZ[i] = self.dZ / self.keep_n_prob
+                # apply dropout mask to the gradients in hidden layers
+                if self.keep_n_prob < 1.0:
+                    self.dZ[i] = self.dZ[i] * self.keep_n[i]
+                    self.dZ[i] = self.dZ[i] / self.keep_n_prob
             
             self.dW[i] = (1 / m) * np.dot(self.dZ[i], self.A[i - 1].T)
             self.db[i] = (1 / m) * np.sum(self.dZ[i], axis=1, keepdims=True)
@@ -166,9 +166,9 @@ class neural_network:
             self.W[i] -= (self.learning_rate * V_dW_corrected) / (np.sqrt(S_dW_corrected) + epsilon)
             self.b[i] -= (self.learning_rate * V_db_corrected) / (np.sqrt(S_db_corrected) + epsilon)
 
-    def predict(self, X, is_training):
+    def predict(self, X):
         # calculate probabilities for each instance
-        output = self.forward_propagation(X, is_training)
+        output = self.forward_propagation(X, False)
 
         # prediction
         predictions = np.argmax(output, axis=0)
@@ -189,7 +189,7 @@ class neural_network:
         for k in range(num_complete_batches):
             mini_batch_X = shuffled_X[:, k * batch_size : (k + 1) * batch_size]
             mini_batch_y = shuffled_y[k * batch_size : (k + 1) * batch_size]
-            mini_batches.append(mini_batch_X, mini_batch_y)
+            mini_batches.append((mini_batch_X, mini_batch_y))
 
         # for remaining data
         if m % batch_size != 0:
@@ -211,7 +211,6 @@ class neural_network:
 
         # loss function
         cost = self.cross_entropy(y_oh)
-        epoch_cost += cost
 
         # back propagation
         self.back_propagation(y_oh)
@@ -220,12 +219,13 @@ class neural_network:
         if self.optimizer == 'adam': self.update_adam_params()
         else: self.update_gd_params()
 
-        return epoch_cost, 
+        return cost
 
-    def fit(self, X, y, batch_size, is_training, patience):
+    def fit(self, X, y, batch_size, patience):
         # initialization for early stopping
-        best_cost = float('inf1')
+        best_cost = float('inf')
         patience_cnt = 0
+        is_training = True
 
         for epoch in range(1, self.epochs + 1):
             # create mini batches for this epoch
@@ -233,10 +233,10 @@ class neural_network:
             epoch_cost = 0
 
             for mini_batch in mini_batches:
-                epoch_cost,  = self.train_step(mini_batch, is_training)
+                epoch_cost += self.train_step(mini_batch, is_training)
 
             # store accuracy in each epoch for plotting
-            predictions = self.predict(X, is_training)
+            predictions = self.predict(X)
             current_accuracy = self.accuracy(y, predictions)
             self.accuracy_history.append(current_accuracy)
 
@@ -245,7 +245,7 @@ class neural_network:
             self.loss_history.append(avg_epoch_cost)
 
             if epoch == self.epochs:
-                print(f"Last Epoch ({epoch})'s Cost: {avg_epoch_cost:.5f}\n")
+                print(f"\t\tLast Epoch ({epoch})'s Cost: {avg_epoch_cost:.5f}")
 
             if avg_epoch_cost < best_cost:
                 best_cost = avg_epoch_cost
@@ -254,7 +254,7 @@ class neural_network:
                 patience_cnt += 1
 
             if patience_cnt >= patience:
-                print(f'\nEarly stopping triggered at epoch {epoch} with best cost: {best_cost:.5f}\n')
+                print(f'\t\tEarly stopping triggered at epoch {epoch} with best cost: {best_cost:.5f}')
                 break
     
     def accuracy(self, y, predictions):
@@ -345,10 +345,11 @@ def confusion_matrix_plot(y, predictions, set_name):
     plt.title(f'Confusion Matrix on {set_name} Set')
     plt.show()
 
-def evaluation_plotting(model, X, y, is_training, set_name):
-    predictions = model.predict(X, is_training)
-    accuracy_plot(model, y, predictions, set_name)
-    loss_plot(model, y, set_name)
+def evaluation_plotting(model, X, y, set_name):
+    predictions = model.predict(X)
+    if (set_name == 'Training'):
+        accuracy_plot(model, y, predictions, set_name)
+        loss_plot(model, y, set_name)
     confusion_matrix_plot(y, predictions, set_name)
     print()
 
@@ -371,17 +372,17 @@ X_test = X_test.T / 255
 # init model params
 # number of neurons for each layer (input, hidden, output)
 neurons = {0: 784, 1: 128, 2: 10}
-learning_rate = 0.8, epochs = 120,  keep_neuron_prob = 0.8, optimizer = 'adam'
+learning_rate, epochs,  keep_neuron_prob, optimizer = 0.001, 30, 0.8, 'adam'
 
 # create the model
 nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob, optimizer)
 
 # init fit params
-batch_size = 128, patience = 5
+batch_size, patience = 128, 5
 
 # training the model
-print('Starting training...\n')
-print(f'Learning Rate: {learning_rate}')
+print('Starting training...')
+print(f'\t\tLearning Rate: {learning_rate}')
 nn.fit(X_train, y_train, batch_size, patience)
 print('Training completed!\n')
 
@@ -389,11 +390,11 @@ print('Training completed!\n')
 nn.save_W_and_b()
 
 # evaluation plotting for training set
-evaluation_plotting(nn, X_train, y_train, True, 'Training')
+evaluation_plotting(nn, X_train, y_train, 'Training')
 
 # create new model and load previous model parameters from a file
-fresh_nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob)
+fresh_nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob, optimizer)
 fresh_nn.load_W_and_b()
 
 # evaluation plotting for test set
-evaluation_plotting(fresh_nn, X_test, y_test, False, 'Test')
+evaluation_plotting(fresh_nn, X_test, y_test, 'Test')
