@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import pickle
+import copy
 
 class neural_network:
     def __init__(self, neurons, learning_rate, epochs, keep_n_prob, optimizer):
@@ -245,7 +246,7 @@ class neural_network:
             self.loss_history.append(avg_epoch_cost)
 
             if epoch == self.epochs:
-                print(f"\t\tLast Epoch ({epoch})'s Cost: {avg_epoch_cost:.5f}")
+                print(f"\tLast Epoch ({epoch})'s Cost: {avg_epoch_cost:.5f}")
 
             if avg_epoch_cost < best_cost:
                 best_cost = avg_epoch_cost
@@ -300,31 +301,64 @@ class neural_network:
         self.b = model_params['b']
         self.n = model_params['n']
 
-def accuracy_plot(model, y, predictions, set_name):
-    accuracy = model.accuracy(y, predictions)
-    print(f'Accuracy on {set_name} Set: {accuracy:.2f}%')
-
+def accuracy_plot(model, y, predictions, set_name, lines):
     plt.figure(figsize=(7, 5))
-    plt.plot(model.accuracy_history, label=f'{set_name} Accuracy')
+
+    if lines:
+        accuracy = []
+        for i in range(len(lines)):
+            accuracy.append(model[i].accuracy(y, predictions[i]))
+            print(f'Accuracy on {set_name} Set: {accuracy[i]:.2f}%')
+
+            if (set_name == 'Test'): return
+
+            _, label = lines[i]
+            plt.plot(model[i].accuracy_history, label=label)
+    else:
+        accuracy = model.accuracy(y, predictions)
+        print(f'Accuracy on {set_name} Set: {accuracy:.2f}%')
+        
+        if (set_name == 'Test'): return
+        
+        plt.plot(model.accuracy_history, label=f'{set_name} Accuracy')
+
     plt.title(f'Model Accuracy over Epochs on {set_name} Set')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy (%)')
     plt.grid(True)
+    plt.legend()
     plt.show()
 
-def loss_plot(model, y, set_name):
-    loss = model.loss(y)
-    print(f'Loss on {set_name} Set: {loss:.2f}')
-
+def loss_plot(model, y, set_name, lines):
     plt.figure(figsize=(7, 5))
-    plt.plot(model.loss_history, label=f'{set_name} Loss')
+
+    if lines:
+        loss = []
+        for i in range(len(lines)):
+            loss.append(model[i].loss(y))
+            print(f'Loss on {set_name} Set: {loss[i]:.2f}')
+
+            if (set_name == 'Test'): return
+
+            _, label = lines[i]
+            plt.plot(model[i].loss_history, label=label)
+    else:
+        loss = model.loss(y)
+        print(f'Loss on {set_name} Set: {loss:.2f}')
+        
+        if (set_name == 'Test'): return
+        
+        plt.plot(model.loss_history, label=f'{set_name} Loss')
+
     plt.title(f'Model Loss over Epochs on {set_name} Set')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.grid(True)
+    plt.legend()
     plt.show()
 
-def confusion_matrix_plot(y, predictions, set_name):
+def confusion_matrix_plot(y, predictions, set_name, lines):
+    if lines: return
     cm = confusion_matrix(y, predictions)
     
     # advanced analyzing
@@ -345,13 +379,48 @@ def confusion_matrix_plot(y, predictions, set_name):
     plt.title(f'Confusion Matrix on {set_name} Set')
     plt.show()
 
-def evaluation_plotting(model, X, y, set_name):
-    predictions = model.predict(X)
-    if (set_name == 'Training'):
-        accuracy_plot(model, y, predictions, set_name)
-        loss_plot(model, y, set_name)
-    confusion_matrix_plot(y, predictions, set_name)
+def evaluation_plotting(model, X, y, set_name, lines):
+    prediction = None
+
+    if lines:
+        models = []
+        predictions = []
+        
+        for exp_nn, _ in lines:
+            models.append(exp_nn)
+            predictions.append(exp_nn.predict(X))
+        
+        model = copy.deepcopy(models)
+        prediction = copy.deepcopy(predictions)
+    else:
+        prediction = model.predict(X)
+
+    accuracy_plot(model, y, prediction, set_name, lines)
+    loss_plot(model, y, set_name, lines)
+    confusion_matrix_plot(y, prediction, set_name, lines)
     print()
+
+def experiment(param_name, values_to_test, base_config, X, y):
+    lines = []
+    
+    print('Starting training...')
+    for val in values_to_test:
+        current_config = copy.deepcopy(base_config)
+        current_config[param_name] = val
+        
+        exp_nn = neural_network(
+            neurons=current_config['neurons'],
+            learning_rate=current_config['learning_rate'],
+            epochs=current_config['epochs'],
+            keep_n_prob=current_config['keep_n_prob'],
+            optimizer=current_config['optimizer']
+        )
+                
+        exp_nn.fit(X, y, current_config['batch_size'], current_config['patience'])
+        lines.append((exp_nn, f"{param_name}: {val}"))
+    
+    print('Training completed!\n')
+    evaluation_plotting(None, X, y, 'Training', lines)
 
 # read dataset
 train_df = pd.read_csv("src/data/mnist_train.csv")
@@ -372,7 +441,7 @@ X_test = X_test.T / 255
 # init model params
 # number of neurons for each layer (input, hidden, output)
 neurons = {0: 784, 1: 128, 2: 10}
-learning_rate, epochs,  keep_neuron_prob, optimizer = 0.001, 30, 0.8, 'adam'
+learning_rate, epochs, keep_neuron_prob, optimizer = 0.001, 25, 0.8, 'adam'
 
 # create the model
 nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob, optimizer)
@@ -382,7 +451,7 @@ batch_size, patience = 128, 5
 
 # training the model
 print('Starting training...')
-print(f'\t\tLearning Rate: {learning_rate}')
+print(f'\tLearning Rate: {learning_rate}')
 nn.fit(X_train, y_train, batch_size, patience)
 print('Training completed!\n')
 
@@ -390,11 +459,24 @@ print('Training completed!\n')
 nn.save_W_and_b()
 
 # evaluation plotting for training set
-evaluation_plotting(nn, X_train, y_train, 'Training')
+evaluation_plotting(nn, X_train, y_train, 'Training', None)
 
 # create new model and load previous model parameters from a file
 fresh_nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob, optimizer)
 fresh_nn.load_W_and_b()
 
 # evaluation plotting for test set
-evaluation_plotting(fresh_nn, X_test, y_test, 'Test')
+evaluation_plotting(fresh_nn, X_test, y_test, 'Test', None)
+
+# experiment different hyperparameters
+base_config = {
+    'neurons': {0: 784, 1: 128, 2: 10},
+    'learning_rate': 0.1,
+    'epochs': 30,
+    'keep_n_prob': 0.8,
+    'optimizer': 'gd',
+    'batch_size': 128,
+    'patience': 1000
+}
+values_to_test = [10, 25, 40]
+experiment('epochs', values_to_test, base_config, X_train, y_train)
