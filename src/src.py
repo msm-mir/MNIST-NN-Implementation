@@ -302,6 +302,13 @@ def confusion_matrix_plot(y, predictions, set_name):
     plt.title(f'Confusion Matrix on {set_name} Set')
     plt.show()
 
+def evaluation_plotting(model, X, y, is_training, set_name):
+    predictions = model.predict(X, is_training)
+    accuracy_plot(model, y, predictions, set_name)
+    loss_plot(model, y, set_name)
+    confusion_matrix_plot(y, predictions, set_name)
+    print()
+
 # read dataset
 train_df = pd.read_csv("src/data/mnist_train.csv")
 test_df = pd.read_csv("src/data/mnist_test.csv")
@@ -318,15 +325,10 @@ y_test = test_df['label'].values
 X_train = X_train.T / 255
 X_test = X_test.T / 255
 
-# number of neurons for each layer (input, hidden, output)
-neurons = {0: X_train.shape[0], 1: 128, 2: 10}
-
 # init model params
-learning_rate = 0.8
-epochs = 120
-batch_size = 128
-keep_neuron_prob = 0.8
-patience = 5
+learning_rate = 0.8, epochs = 120, batch_size = 128, keep_neuron_prob = 0.8, patience = 5
+# number of neurons for each layer (input, hidden, output)
+neurons = {0: 784, 1: 128, 2: 10}
 
 # create the model
 nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob)
@@ -341,21 +343,11 @@ print('Training completed!\n')
 nn.save_W_and_b()
 
 # evaluation plotting for training set
-predictions = nn.predict(X_train, True)
-accuracy_plot(nn, y_train, predictions, 'Training')
-loss_plot(nn, y_train, 'Training')
-confusion_matrix_plot(y_train, predictions, 'Training')
-
-print()
+evaluation_plotting(nn, X_train, y_train, True, 'Training')
 
 # create new model and load previous model parameters from a file
 fresh_nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob)
 fresh_nn.load_W_and_b()
 
 # evaluation plotting for test set
-predictions = fresh_nn.predict(X_test, False)
-accuracy_plot(fresh_nn, y_test, predictions, 'Test')
-loss_plot(fresh_nn, y_test, 'Test')
-confusion_matrix_plot(y_test, predictions, 'Test')
-
-print()
+evaluation_plotting(fresh_nn, X_test, y_test, False, 'Test')
