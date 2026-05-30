@@ -157,10 +157,10 @@ class neural_network:
             self.S_db[i] = (beta2 * self.S_db[i]) + ((1 - beta2) * (self.db[i] ** 2))
             
             # bias correction
-            V_dW_corrected = self.V_dW[i] / (1 - (beta1 ** self.t))
-            V_db_corrected = self.V_db[i] / (1 - (beta1 ** self.t))
-            S_dW_corrected = self.S_dW[i] / (1 - (beta2 ** self.t))
-            S_db_corrected = self.S_db[i] / (1 - (beta2 ** self.t))
+            V_dW_corrected = self.V_dW[i] / (1 - (beta1 ** self.update_steps_cnt))
+            V_db_corrected = self.V_db[i] / (1 - (beta1 ** self.update_steps_cnt))
+            S_dW_corrected = self.S_dW[i] / (1 - (beta2 ** self.update_steps_cnt))
+            S_db_corrected = self.S_db[i] / (1 - (beta2 ** self.update_steps_cnt))
             
             # final update
             self.W[i] -= (self.learning_rate * V_dW_corrected) / (np.sqrt(S_dW_corrected) + epsilon)
