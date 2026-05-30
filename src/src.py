@@ -40,7 +40,7 @@ class neural_network:
         if optimizer == 'gd': self.init_gd_W_b()
         else: self.init_adam_W_b()
     
-    # weights and biases initialization for gd algo
+    # weights and biases initialization for gd algorithm
     def init_gd_W_b(self):
         np.random.seed(42)
 
@@ -49,7 +49,7 @@ class neural_network:
             self.W[i] = np.random.randn(self.n[i], self.n[i - 1]) * 0.01
             self.b[i] = np.zeros((self.n[i], 1))
     
-    # weights and biases initialization for adam algo
+    # weights and biases initialization for adam algorithm
     def init_adam_W_b(self):
         for i in range(1, len(self.n)):
             self.V_dW[i] = np.zeros_like(self.W[i])
@@ -133,12 +133,38 @@ class neural_network:
             self.dW[i] = (1 / m) * np.dot(self.dZ[i], self.A[i - 1].T)
             self.db[i] = (1 / m) * np.sum(self.dZ[i], axis=1, keepdims=True)
 
-    # update weights and biases using gradient descent
-    def update_params(self):
+    # update weights and biases using gd algorithm
+    def update_gd_params(self):
         # for each layer
         for i in range(1, len(self.n)):
-            self.W[i] = self.W[i] - (self.learning_rate * self.dW[i])
-            self.b[i] = self.b[i] - (self.learning_rate * self.db[i])
+            self.W[i] -= (self.learning_rate * self.dW[i])
+            self.b[i] -= (self.learning_rate * self.db[i])
+
+    # update weights and biases using adam algorithm
+    def update_adam_params(self):
+        beta1 = 0.9
+        beta2 = 0.999
+        epsilon = 1e-8
+        self.update_steps_cnt += 1
+            
+        for i in range(1, len(self.n)):
+            # calculate momentum
+            self.V_dW[i] = (beta1 * self.V_dW[i]) + ((1 - beta1) * self.dW[i])
+            self.V_db[i] = (beta1 * self.V_db[i]) + ((1 - beta1) * self.db[i])
+            
+            # calculate RMSProp
+            self.S_dW[i] = (beta2 * self.S_dW[i]) + ((1 - beta2) * (self.dW[i] ** 2))
+            self.S_db[i] = (beta2 * self.S_db[i]) + ((1 - beta2) * (self.db[i] ** 2))
+            
+            # bias correction
+            V_dW_corrected = self.V_dW[i] / (1 - (beta1 ** self.t))
+            V_db_corrected = self.V_db[i] / (1 - (beta1 ** self.t))
+            S_dW_corrected = self.S_dW[i] / (1 - (beta2 ** self.t))
+            S_db_corrected = self.S_db[i] / (1 - (beta2 ** self.t))
+            
+            # final update
+            self.W[i] -= (self.learning_rate * V_dW_corrected) / (np.sqrt(S_dW_corrected) + epsilon)
+            self.b[i] -= (self.learning_rate * V_db_corrected) / (np.sqrt(S_db_corrected) + epsilon)
 
     def predict(self, X, is_training):
         # calculate probabilities for each instance
@@ -191,7 +217,8 @@ class neural_network:
         self.back_propagation(y_oh)
 
         # update weights and biases
-        self.update_params()
+        if self.optimizer == 'adam': self.update_adam_params()
+        else: self.update_gd_params()
 
         return epoch_cost, 
 
