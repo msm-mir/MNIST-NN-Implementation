@@ -107,6 +107,11 @@ class neural_network:
                 self.dZ[i] = self.A[i] - y_oh
             else:
                 self.dZ[i] = np.dot(self.W[i + 1].T, self.dZ[i + 1]) * (self.Z[i] > 0)
+
+            # apply dropout mask to the gradients in hidden layers
+            if self.keep_n_prob < 1.0:
+                self.dZ[i] = self.dZ * self.keep_n[i]
+                self.dZ[i] = self.dZ / self.keep_n_prob
             
             self.dW[i] = (1 / m) * np.dot(self.dZ[i], self.A[i - 1].T)
             self.db[i] = (1 / m) * np.sum(self.dZ[i], axis=1, keepdims=True)
@@ -274,9 +279,10 @@ neurons = {0: X_train.shape[0], 1: 128, 2: 10}
 learning_rate = 0.8
 epochs = 120
 batch_size = 128
+keep_neuron_prob = 0.8
 
 # create the model
-nn = neural_network(neurons, learning_rate, epochs)
+nn = neural_network(neurons, learning_rate, epochs, keep_neuron_prob)
 
 # training the model
 print('Starting training...\n')
