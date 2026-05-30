@@ -63,7 +63,7 @@ class neural_network:
 
         return self.A[len(self.n) - 1]
 
-    # broadcast y matrix to A's dimensions
+    # one-hot encode the y matrix
     def init_y_one_hot(self, y):
         m = y.shape[0]
         new_y = np.zeros((10, m))
@@ -138,31 +138,43 @@ class neural_network:
 
         return mini_batches
 
-    def fit(self, X, y):
-        y_oh = self.init_y_one_hot(y)
-
+    def fit(self, X, y, batch_size):
         for epoch in range(1, self.epochs + 1):
-            # prediction by forward propagation
-            predictions = self.predict(X)
+            # create mini batches for this epoch
+            mini_batches = self.create_mini_batches(X, y, batch_size)
+            epoch_cost = 0
 
-            # loss function
-            cost = self.cross_entropy(y_oh)
+            for mini_batch in mini_batches:
+                # split mini batch to X, y
+                mini_batch_X, mini_batch_y = mini_batch
 
-            # back propagation
-            self.back_propagation(y_oh)
+                # one-hot encode the labels of y batch
+                y_oh = self.init_y_one_hot(mini_batch_y)
 
-            # update weights and biases
-            self.update_params()
+                # prediction by forward propagation
+                predictions = self.predict(mini_batch_X)
+
+                # loss function
+                cost = self.cross_entropy(y_oh)
+                epoch_cost += cost
+
+                # back propagation
+                self.back_propagation(y_oh)
+
+                # update weights and biases
+                self.update_params()
 
             # store accuracy in each epoch for plotting
+            predictions = self.predict(X)
             current_accuracy = self.accuracy(y, predictions)
             self.accuracy_history.append(current_accuracy)
 
             # store loss in each epoch for plotting
-            self.loss_history.append(cost)
+            avg_epoch_cost = epoch_cost / len(mini_batches)
+            self.loss_history.append(avg_epoch_cost)
 
             if epoch == self.epochs:
-                print(f"Last Epoch ({epoch})'s Cost: {cost:.5f}\n")
+                print(f"Last Epoch ({epoch})'s Cost: {avg_epoch_cost:.5f}\n")
     
     def accuracy(self, y, predictions):
         # real outputs vs prediction
@@ -248,6 +260,7 @@ neurons = {0: X_train.shape[0], 1: 128, 2: 10}
 # init model params
 learning_rate = 0.8
 epochs = 120
+batch_size = 128
 
 # create the model
 nn = neural_network(neurons, learning_rate, epochs)
@@ -255,7 +268,7 @@ nn = neural_network(neurons, learning_rate, epochs)
 # training the model
 print('Starting training...\n')
 print(f'Learning Rate: {learning_rate}')
-nn.fit(X_train, y_train)
+nn.fit(X_train, y_train, batch_size)
 print('Training completed!\n')
 
 # evaluation plotting for training set
