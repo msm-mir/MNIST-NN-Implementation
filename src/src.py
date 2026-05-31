@@ -302,18 +302,19 @@ class neural_network:
         self.n = model_params['n']
 
 def accuracy_plot(model, y, predictions, set_name, lines):
-    plt.figure(figsize=(7, 5))
+    if (set_name != 'Test'):
+        plt.figure(figsize=(7, 5))
 
     if lines:
         accuracy = []
-        for i in range(len(lines)):
+        for i in range(len(model)):
             accuracy.append(model[i].accuracy(y, predictions[i]))
             print(f'Accuracy on {set_name} Set: {accuracy[i]:.2f}%')
 
             if (set_name == 'Test'): return
 
-            _, label = lines[i]
-            plt.plot(model[i].accuracy_history, label=label)
+            exp_nn, label = lines[i]
+            plt.plot(exp_nn.accuracy_history, label=label)
     else:
         accuracy = model.accuracy(y, predictions)
         print(f'Accuracy on {set_name} Set: {accuracy:.2f}%')
@@ -330,7 +331,8 @@ def accuracy_plot(model, y, predictions, set_name, lines):
     plt.show()
 
 def loss_plot(model, y, set_name, lines):
-    plt.figure(figsize=(7, 5))
+    if (set_name != 'Test'):
+        plt.figure(figsize=(7, 5))
 
     if lines:
         loss = []
@@ -340,8 +342,8 @@ def loss_plot(model, y, set_name, lines):
 
             if (set_name == 'Test'): return
 
-            _, label = lines[i]
-            plt.plot(model[i].loss_history, label=label)
+            exp_nn, label = lines[i]
+            plt.plot(exp_nn.loss_history, label=label)
     else:
         loss = model.loss(y)
         print(f'Loss on {set_name} Set: {loss:.2f}')
@@ -476,7 +478,7 @@ base_config = {
     'keep_n_prob': 0.8,
     'optimizer': 'gd',
     'batch_size': 128,
-    'patience': 1000
+    'patience': 5
 }
-values_to_test = [10, 25, 40]
-experiment('epochs', values_to_test, base_config, X_train, y_train)
+values_to_test = [0.01, 0.02]
+experiment('learning_rate', values_to_test, base_config, X_train, y_train)
