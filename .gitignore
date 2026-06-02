@@ -1,5 +1,6 @@
 شبکه عصبی (mnist).pdf
 report.docx
 report.pdf
-data\mnist_train.csv
-data\mnist_test.csv
+src\data\mnist_train.csv
+src\data\mnist_test.csv
+weights_and_biases.pkl
